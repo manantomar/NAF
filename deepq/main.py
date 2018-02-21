@@ -19,6 +19,7 @@ def main():
     set_global_seeds(args.seed)
     env = gym.make(args.env_id)
     env = bench.Monitor(env, logger.get_dir())
+    env.seed(args.seed)
     v_func = deepq.models.mlp(
         hiddens=[200, 200],
     )
@@ -37,9 +38,9 @@ def main():
         env,
         models=[mu_func, v_func, l_func],
         action_noise=action_noise,
-        lr=1e-4,
+        lr=1e-3,
         max_timesteps=args.num_timesteps,
-        buffer_size=10000,
+        buffer_size=100000,
         exploration_fraction=0.1,
         exploration_final_eps=0.01,
         train_freq=4,

@@ -14,7 +14,7 @@ def _mlp(hiddens, inpt, num_actions, scope, reuse=False, layer_norm=False):
         return q_out
 
 
-def mlp(hiddens=[], layer_norm=False):
+def mlp(hiddens=[], layer_norm=True):
     """This model takes as input an observation and returns values of all actions.
 
     Parameters
@@ -88,4 +88,3 @@ def cnn_to_mlp(convs, hiddens, dueling=False, layer_norm=False):
     """
 
     return lambda *args, **kwargs: _cnn_to_mlp(convs, hiddens, dueling, layer_norm=layer_norm, *args, **kwargs)
-

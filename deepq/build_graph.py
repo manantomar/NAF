@@ -404,7 +404,8 @@ def build_train(make_obs_ph, mu_func, v_func, l_func, action_noise, num_actions,
             #print("shape L", tf.stack(rows).shape, diagonal.shape)
             L = tf.matmul(l_t, tf.transpose(l_t, (0,2,1)))
             u = tf.expand_dims(act_t_ph - mu_t, 1)
-            a_t = -0.5 * tf.reduce_mean(tf.matmul(tf.matmul(tf.transpose(u, (0,2,1)), L), u), 2)
+            print("L shape", L.shape, u.shape)
+            a_t = -0.5 * tf.reduce_mean(tf.matmul(tf.matmul(u, L), tf.transpose(u, (0,2,1))), 2)
 
 
             q_t = a_t + v_t
@@ -412,6 +413,7 @@ def build_train(make_obs_ph, mu_func, v_func, l_func, action_noise, num_actions,
         # q network evaluation
         #q_t = q_func(obs_t_input.get(), num_actions, scope="q_func", reuse=True)  # reuse parameters from act
         q_func_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=tf.get_variable_scope().name + "/q_func")
+        v_func_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=tf.get_variable_scope().name + "/q_func/v_func")
 
         # target q network evalution
         v_tp1 = v_func(obs_tp1_input.get(), 1, scope="target_v_func")
@@ -420,7 +422,7 @@ def build_train(make_obs_ph, mu_func, v_func, l_func, action_noise, num_actions,
         # q scores for actions which we know were selected in the given state.
         #q_t_selected = tf.reduce_sum(q_t * tf.one_hot(act_t_ph, num_actions), 1)
         q_t_selected = q_t
-        print("q_shape", l_t.name )
+        print("q_shape", tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=tf.get_variable_scope().name + "/q_func/v_func") )
         # compute estimate of best possible value starting from state at t + 1
         #if double_q:
         #    q_tp1_using_online_net = q_func(obs_tp1_input.get(), num_actions, scope="q_func", reuse=True)
@@ -450,8 +452,9 @@ def build_train(make_obs_ph, mu_func, v_func, l_func, action_noise, num_actions,
 
         # update_target_fn will be called periodically to copy Q network to target Q network
         update_target_expr = []
-        for var, var_target in zip(sorted(q_func_vars, key=lambda v: v.name),
+        for var, var_target in zip(sorted(v_func_vars, key=lambda v: v.name),
                                    sorted(target_q_func_vars, key=lambda v: v.name)):
+            print("var_target", var_target, var_target.shape, var, var.shape)
             update_target_expr.append(var_target.assign(var))
         update_target_expr = tf.group(*update_target_expr)
 
